@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -61,15 +62,28 @@ func checkURL(client *http.Client, url string) Result {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: url-checker <url>")
+	outputFile := flag.String("o", "", "output file")
+	flag.Parse()
+
+	if flag.NArg() < 1 {
+		log.Fatal("Usage: url-checker [-o output.txt] <urls_file>")
 	}
 
-	filePath := os.Args[1]
+	filePath := flag.Arg(0)
 
 	urls, err := readURLs(filePath)
 	if err != nil {
 		log.Fatal("Error reading file: ", err)
+	}
+
+	var writer *os.File = os.Stdout
+	if *outputFile != "" {
+		file, err := os.Create(*outputFile)
+		if err != nil {
+			log.Fatal("Error creating file: ", err)
+		}
+		defer file.Close()
+		writer = file
 	}
 
 	client := &http.Client{
@@ -80,9 +94,15 @@ func main() {
 		result := checkURL(client, url)
 
 		if result.Err != nil {
-			fmt.Printf("%s ERROR: %v\n", result.URL, result.Err)
+			_, err := fmt.Fprintf(writer, "%s ERROR: %v\n", result.URL, result.Err)
+			if err != nil {
+				log.Println("Write error:", err)
+			}
 		}
 
-		fmt.Printf("%s STATUS: %d LATENCT: %v\n", result.URL, result.StatusCode, result.Latency)
+		_, err := fmt.Fprintf(writer, "%s STATUS: %d LATENCT: %v\n", result.URL, result.StatusCode, result.Latency)
+		if err != nil {
+			log.Println("Write error:", err)
+		}
 	}
 }
