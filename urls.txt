@@ -1,0 +1,10 @@
+https://google.com
+https://github.com
+https://stackoverflow.com
+https://golang.org
+https://example.com
+https://httpbin.org/status/200
+https://httpbin.org/status/404
+https://httpbin.org/delay/2
+https://invalid-domain-test-12345.com
+http://localhost:8080
