@@ -17,33 +17,6 @@ type Result struct {
 	Err        error
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: url-checker <url>")
-	}
-
-	filePath := os.Args[1]
-
-	urls, err := readURLs(filePath)
-	if err != nil {
-		log.Fatal("Error reading file: ", err)
-	}
-
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-
-	for _, url := range urls {
-		result := checkURL(client, url)
-
-		if result.Err != nil {
-			fmt.Printf("%s ERROR: %v\n", result.URL, result.Err)
-		}
-
-		fmt.Printf("%s STATUS: %d LATENCT: %v\n", result.URL, result.StatusCode, result.Latency)
-	}
-}
-
 func readURLs(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -84,5 +57,32 @@ func checkURL(client *http.Client, url string) Result {
 		URL:        url,
 		StatusCode: resp.StatusCode,
 		Latency:    latency,
+	}
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: url-checker <url>")
+	}
+
+	filePath := os.Args[1]
+
+	urls, err := readURLs(filePath)
+	if err != nil {
+		log.Fatal("Error reading file: ", err)
+	}
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	for _, url := range urls {
+		result := checkURL(client, url)
+
+		if result.Err != nil {
+			fmt.Printf("%s ERROR: %v\n", result.URL, result.Err)
+		}
+
+		fmt.Printf("%s STATUS: %d LATENCT: %v\n", result.URL, result.StatusCode, result.Latency)
 	}
 }
