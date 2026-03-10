@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -61,6 +62,15 @@ func checkURL(client *http.Client, url string) Result {
 	}
 }
 
+func worker(id int, jobs <-chan string, results chan<- Result, client *http.Client, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for url := range jobs {
+		result := checkURL(client, url)
+		results <- result
+	}
+}
+
 func main() {
 	outputFile := flag.String("o", "", "output file")
 	flag.Parse()
@@ -90,9 +100,30 @@ func main() {
 		Timeout: 5 * time.Second,
 	}
 
-	for _, url := range urls {
-		result := checkURL(client, url)
+	jobs := make(chan string, len(urls))
+	results := make(chan Result, len(urls))
 
+	var wg sync.WaitGroup
+
+	workers := 10
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go worker(i, jobs, results, client, &wg)
+	}
+
+	for _, url := range urls {
+		jobs <- url
+	}
+
+	close(jobs)
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	for result := range results {
 		if result.Err != nil {
 			_, err := fmt.Fprintf(writer, "%s ERROR: %v\n", result.URL, result.Err)
 			if err != nil {
