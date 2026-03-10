@@ -131,7 +131,13 @@ func main() {
 			}
 		}
 
-		_, err := fmt.Fprintf(writer, "%s STATUS: %d LATENCY: %v\n", result.URL, result.StatusCode, result.Latency)
+		_, err := fmt.Fprintf(
+			writer,
+			"%s STATUS: %d LATENCY: %v\n",
+			result.URL,
+			result.StatusCode,
+			result.Latency,
+		)
 		if err != nil {
 			log.Println("Write error:", err)
 		}
