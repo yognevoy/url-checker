@@ -62,7 +62,7 @@ func checkURL(client *http.Client, url string) Result {
 	}
 }
 
-func worker(id int, jobs <-chan string, results chan<- Result, client *http.Client, wg *sync.WaitGroup) {
+func worker(jobs <-chan string, results chan<- Result, client *http.Client, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for url := range jobs {
@@ -109,7 +109,7 @@ func main() {
 
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
-		go worker(i, jobs, results, client, &wg)
+		go worker(jobs, results, client, &wg)
 	}
 
 	for _, url := range urls {
